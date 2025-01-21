@@ -1,0 +1,83 @@
+﻿@page "/asistencias"
+
+@using AsistenciasCrud.Shared;
+@using CurrieTechnologies.Razor.SweetAlert2;
+@using AsistenciasCrud.Client.Services;
+
+@inject SweetAlertService Swal;
+@inject IAsistenciaService asistenciaService;
+
+<h3>Asistencias</h3>
+
+<a class="btn btn-success btn-sm mb-3" href="asistencia">Nueva Asistencia</a>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Usuario</th>
+            <th>Fecha</th>
+            <th>Hora Entrada</th>
+            <th>Hora Salida</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+
+        @if (listaAsistencias == null)
+        {
+            <tr>
+                <td colspan="5" align="center">
+                    <img style="width:50px" src="https://media.tenor.com/On7kvXhzml4AAAAj/loading-gif.gif" />
+                </td>
+            </tr>
+        }
+        else
+        {
+            @foreach (var item in listaAsistencias)
+            {
+                <tr>
+                    <td>@item.IdUsuarioNavigation?.Nombre</td>
+                    <td>@item.Fecha.ToString("dd/MM/yyyy")</td>
+                    <td>@item.HoraEntrada?.ToString("hh\\:mm")</td>
+                    <td>@item.HoraSalida?.ToString("hh\\:mm")</td>
+                    <td>
+                        <a class="btn btn-primary btn-sm" href="asistencia/@item.IdAsistencia">
+                            <i class="oi oi-pencil"></i>
+                        </a>
+                        <button type="button" class="btn btn-danger btn-sm ms-2" @onclick="(() => Eliminar(item.IdAsistencia))">
+                            <i class="oi oi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+        }
+
+    </tbody>
+</table>
+
+@code {
+    List<AsistenciaIN>? listaAsistencias = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        listaAsistencias = await asistenciaService.Lista();
+    }
+
+    private async Task Eliminar(int id)
+    {
+        var resultado = await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Eliminar Asistencia",
+                Text = "¿Deseas eliminar esta asistencia?",
+                Icon = SweetAlertIcon.Question,
+                ShowCancelButton = true
+            });
+
+        if (resultado.IsConfirmed)
+        {
+            var eliminado = await asistenciaService.Eliminar(id);
+            if (eliminado)
+                listaAsistencias = listaAsistencias!.FindAll(a => a.IdAsistencia != id);
+        }
+    }
+}

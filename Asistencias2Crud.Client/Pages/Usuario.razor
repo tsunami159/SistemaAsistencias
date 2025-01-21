@@ -1,0 +1,85 @@
+﻿@page "/usuario"
+@page "/usuario/{idUsuarioEditar:int}"
+
+@using AsistenciasCrud.Shared;
+@using Asistencias2Crud.Client.Services;
+
+@inject IUsuarioService usuarioService;
+@inject NavigationManager navegacion;
+
+<h3>@titulo</h3>
+
+<EditForm Model="usuarioDatos" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label class="form-label">Nombre</label>
+        <InputText class="form-control" @bind-Value="usuarioDatos.Nombre" />
+        <ValidationMessage For="@(() => usuarioDatos.Nombre)" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Correo Electrónico</label>
+        <InputText class="form-control" @bind-Value="usuarioDatos.CorreoElectronico" />
+        <ValidationMessage For="@(() => usuarioDatos.CorreoElectronico)" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Teléfono</label>
+        <InputText class="form-control" @bind-Value="usuarioDatos.Telefono" />
+        <ValidationMessage For="@(() => usuarioDatos.Telefono)" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Tipo de Usuario</label>
+        <InputText class="form-control" @bind-Value="usuarioDatos.TipoUsuario" />
+        <ValidationMessage For="@(() => usuarioDatos.TipoUsuario)" />
+    </div>
+
+    <button class="btn btn-primary" type="submit">@botonTexto</button>
+    <a class="btn btn-secondary ms-2" href="/usuarios">Volver</a>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int idUsuarioEditar { get; set; } = 0;
+
+    private UsuariosIN usuarioDatos = new UsuariosIN();
+    private string titulo = "Nuevo Usuario";
+    private string botonTexto = "Guardar";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (idUsuarioEditar != 0)
+        {
+            usuarioDatos = await usuarioService.Buscar(idUsuarioEditar) ?? new UsuariosIN();
+            titulo = "Editar Usuario";
+            botonTexto = "Actualizar";
+        }
+        else
+        {
+            usuarioDatos.FechaRegistro = DateOnly.FromDateTime(DateTime.Now);
+        }
+    }
+
+    private async Task OnValidSubmit()
+    {
+        if (idUsuarioEditar == 0)
+        {
+            var idNuevo = await usuarioService.Guardar(usuarioDatos);
+            if (idNuevo != 0)
+            {
+                navegacion.NavigateTo("/usuarios");
+            }
+        }
+        else
+        {
+            var actualizado = await usuarioService.Editar(idUsuarioEditar, usuarioDatos);
+            if (actualizado)
+            {
+                navegacion.NavigateTo("/usuarios");
+            }
+        }
+    }
+}
